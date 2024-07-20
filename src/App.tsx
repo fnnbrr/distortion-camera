@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import './App.css';
-import Webcam from "./Webcam";
+import WebcamVideo from "./WebcamVideo";
+import DrawCanvas from "./DrawCanvas";
+import RendererCanvas from "./RendererCanvas";
 
 export default function App() {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const drawCanvasRef = useRef<HTMLCanvasElement>(null);
+    
     return (
         <div className="App">
-            <Webcam />
+            <WebcamVideo outVideoRef={videoRef} />
+            <DrawCanvas outDrawCanvasRef={drawCanvasRef} />
+            <RendererCanvas videoRef={videoRef} drawCanvasRef={drawCanvasRef} />
         </div>
     );
 }

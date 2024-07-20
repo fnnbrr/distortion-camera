@@ -1,4 +1,4 @@
-﻿export const vertex = /* glsl */`
+export const vertex: string = /* glsl */`
 varying vec2 uvVertex;
 
 void main() {
@@ -7,8 +7,9 @@ void main() {
 }
 `
 
-export const fragment = /* glsl */`
+export const fragment: string = /* glsl */`
 uniform sampler2D map;
+uniform sampler2D distortionMap;
 
 varying vec2 uvVertex;
 
