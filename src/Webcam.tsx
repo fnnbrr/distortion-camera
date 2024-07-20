@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { vertex, fragment } from "./assets/DistortionShader.glsl";
 
 export default function Webcam() {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -51,7 +52,14 @@ export default function Webcam() {
         
         const plane = new THREE.PlaneGeometry(1, 1);
         const material = new THREE.MeshBasicMaterial({map: texture});
-        const mesh = new THREE.Mesh(plane, material);
+        const distortionMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                map: { value: texture },
+            },
+            vertexShader: vertex,
+            fragmentShader: fragment,
+        });
+        const mesh = new THREE.Mesh(plane, distortionMaterial);
         scene.add(mesh);
         
         const renderer = new THREE.WebGLRenderer({antialias: true});
