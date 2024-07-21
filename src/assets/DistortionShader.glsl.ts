@@ -14,6 +14,7 @@ uniform sampler2D distortionMap;
 varying vec2 uvFragment;
 
 void main() {
-    gl_FragColor = texture2D(map, uvFragment) + texture2D(distortionMap, uvFragment);
+    vec2 uvDistorted = uvFragment + (0.1 * ((texture2D(distortionMap, uvFragment).rg * 2.0) - 1.0));
+    gl_FragColor = texture2D(map, uvDistorted);
 }
 `
