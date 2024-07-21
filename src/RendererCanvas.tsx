@@ -7,7 +7,7 @@ interface RendererCanvasProps {
     drawCanvasRef: RefObject<HTMLCanvasElement>;
 }
 
-export default function RendererCanvas({ videoRef }: RendererCanvasProps) {
+export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanvasProps) {
     const parentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -21,21 +21,21 @@ export default function RendererCanvas({ videoRef }: RendererCanvasProps) {
     }, []);
     
     function createThreeRenderer() : THREE.WebGLRenderer {
-        let camera = new THREE.OrthographicCamera();
+        const camera = new THREE.OrthographicCamera();
         camera.position.z = 2;
 
-        let scene = new THREE.Scene();
+        const scene = new THREE.Scene();
 
-        if (videoRef.current === null) return new THREE.WebGLRenderer();
+        if (videoRef.current === null || drawCanvasRef.current === null) return new THREE.WebGLRenderer();
 
-        let texture = new THREE.VideoTexture(videoRef.current);
-        texture.colorSpace = THREE.SRGBColorSpace;
+        const videoTexture = new THREE.VideoTexture(videoRef.current);
+        const drawCanvasTexture = new THREE.CanvasTexture(drawCanvasRef.current)
 
         const plane = new THREE.PlaneGeometry(1, 1);
         const distortionMaterial = new THREE.ShaderMaterial({
             uniforms: {
-                map: { value: texture },
-                distortionMap: { value: texture }  // TODO: replace with texture from drawing canvas
+                map: { value: videoTexture },
+                distortionMap: { value: drawCanvasTexture }
             },
             vertexShader: vertex,
             fragmentShader: fragment
@@ -49,7 +49,8 @@ export default function RendererCanvas({ videoRef }: RendererCanvasProps) {
 
         const animate = () => {
             requestAnimationFrame(animate);
-            texture.needsUpdate = true;
+            videoTexture.needsUpdate = true;
+            drawCanvasTexture.needsUpdate = true;
             renderer.render(scene, camera);
         }
 
