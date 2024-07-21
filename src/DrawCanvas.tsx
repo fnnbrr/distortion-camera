@@ -23,7 +23,6 @@ export default function DrawCanvas({ outDrawCanvasRef }: DrawCanvasProps) {
 
         context.current.lineWidth = 5;
         context.current.lineCap = "round";
-        context.current.strokeStyle = "black";
         
         canvas.addEventListener("mousedown", startDrawing);
         canvas.addEventListener("mousemove", draw);
@@ -39,9 +38,13 @@ export default function DrawCanvas({ outDrawCanvasRef }: DrawCanvasProps) {
         if (!isDrawing.current) return;
         if (context.current === null) return;
         
+        context.current?.beginPath();
         context.current.moveTo(drawPosition.current.x, drawPosition.current.y);
         
+        const prevDrawPosition = drawPosition.current.clone();
         recalculateDrawPosition(event);
+
+        context.current.strokeStyle = getStrokeStyleForMove(prevDrawPosition, drawPosition.current);
         
         context.current.lineTo(drawPosition.current.x, drawPosition.current.y);
         context.current.stroke();
@@ -56,6 +59,16 @@ export default function DrawCanvas({ outDrawCanvasRef }: DrawCanvasProps) {
         
         drawPosition.current.x = event.clientX - outDrawCanvasRef.current.offsetLeft;
         drawPosition.current.y = event.clientY - outDrawCanvasRef.current.offsetTop;
+    }
+    
+    function getStrokeStyleForMove(prevPosition: Vector2, curPosition: Vector2): string | CanvasGradient | CanvasPattern {
+        const positionDelta = curPosition.clone().sub(prevPosition);
+        positionDelta.x *= -1;  // To convert from canvas space
+        positionDelta.multiplyScalar(100);  // TODO: calculate scalar from frame time, canvas size, etc.
+        positionDelta.addScalar(255);  // To convert to [0, 255] RGB color space and make all values non-negative
+        positionDelta.multiplyScalar(0.5);  // To compress all values within [0, 255]. Will be reversed in shader
+        
+        return `rgb(${positionDelta.x} ${positionDelta.y} 0)`;
     }
     
     return (
