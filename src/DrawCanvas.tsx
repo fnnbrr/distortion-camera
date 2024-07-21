@@ -15,18 +15,28 @@ export default function DrawCanvas({ outDrawCanvasRef }: DrawCanvasProps) {
         const canvas = outDrawCanvasRef.current;
         if (canvas === null) return;
         
+        canvas.style.opacity = "0";
+        
         context.current = canvas.getContext("2d");
         if (context.current === null) return;
 
+        const parentRect = canvas.parentElement?.getBoundingClientRect();
+        if (parentRect !== undefined) {
+            canvas.width = parentRect.width;
+            canvas.height = parentRect.height;
+        }
+        
         context.current.fillStyle = "#7F7F7F";
-        context.current.fillRect(0, 0, 100, 100);
+        context.current.fillRect(0, 0, canvas.width, canvas.height);
 
-        context.current.lineWidth = 5;
+        context.current.lineWidth = 50;
         context.current.lineCap = "round";
         
         canvas.addEventListener("mousedown", startDrawing);
         canvas.addEventListener("mousemove", draw);
         canvas.addEventListener("mouseup", stopDrawing);
+        
+        document.addEventListener("keydown", onKeyDown);
     }, []);
     
     function startDrawing(event: MouseEvent) {
@@ -54,6 +64,20 @@ export default function DrawCanvas({ outDrawCanvasRef }: DrawCanvasProps) {
         isDrawing.current = false;
     }
     
+    function onKeyDown(event: KeyboardEvent) {
+        if (event.key !== 'Space' && event.code !== 'Space') return;
+
+        const canvas = outDrawCanvasRef.current;
+        if (canvas === null) return;
+        
+        if (canvas.style.opacity === "0") {
+            canvas.style.opacity = "1";
+        }
+        else {
+            canvas.style.opacity = "0";
+        }
+    }
+    
     function recalculateDrawPosition(event: MouseEvent) {
         if (outDrawCanvasRef.current === null) return;
         
@@ -74,8 +98,6 @@ export default function DrawCanvas({ outDrawCanvasRef }: DrawCanvasProps) {
     return (
         <canvas ref={outDrawCanvasRef}
                 className={"draw-canvas"}
-                height={100}
-                width={100}
         ></canvas>
     );
 }
