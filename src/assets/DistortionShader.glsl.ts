@@ -12,7 +12,7 @@ void main() {
 export const fragment: string = /* glsl */`
 uniform sampler2D map;
 uniform sampler2D distortionMap;
-uniform vec2[4] controlPoints;
+uniform vec2[9] controlPoints;
 uniform int dimensionX;
 uniform int dimensionY;
 
