@@ -13,6 +13,8 @@ export const fragment: string = /* glsl */`
 uniform sampler2D map;
 uniform sampler2D distortionMap;
 uniform vec2[4] controlPoints;
+uniform int dimensionX;
+uniform int dimensionY;
 
 varying vec2 uvFragment;
 
@@ -30,31 +32,18 @@ float binomialCoefficient(int n, int k) {
     return factorial(n) / (factorial(k) * factorial(n - k));
 }
 
+float bernsteinPolynomial(int i, int l, float s) {
+    return binomialCoefficient(i, l) * pow((1.0 - s), (float(l) - float(i))) * pow(s, float(i));
+}
+
 void main() {
-    int numX = 2;
-    int numY = 2;
-    
-    int l = 1;
-    int m = 1;
-    
-    float s = uvFragment.x;
-    float t = uvFragment.y;
-    
     vec2 uvDisplaced = vec2(0, 0);
     
-    for (int i = 0; i < numX; i++) {
-        for (int j = 0; j < numY; j++) {
-        
-            float sWeight = binomialCoefficient(i, l) *
-                                pow((1.0 - s), (float(l) - float(i))) *
-                                pow(s, float(i));
-                                
-            float tWeight = binomialCoefficient(j, m) *
-                                pow((1.0 - t), (float(m) - float(j))) *
-                                pow(t, float(j));
-            
-            vec2 controlPoint = controlPoints[(i * numX) + j];
-            
+    for (int i = 0; i < dimensionX; i++) {
+        float sWeight = bernsteinPolynomial(i, (dimensionX - 1), uvFragment.x);
+        for (int j = 0; j < dimensionY; j++) {
+            float tWeight = bernsteinPolynomial(j, (dimensionY - 1), uvFragment.y);
+            vec2 controlPoint = controlPoints[(i * dimensionX) + j];
             uvDisplaced += sWeight * tWeight * controlPoint;
         }
     }

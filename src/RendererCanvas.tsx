@@ -44,7 +44,9 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
                         new THREE.Vector2(1, 1),
                         // Modified control points below
                         // new THREE.Vector2(0.5, 0.5)
-                    ]}
+                    ]},
+                dimensionX: { value: 2 },
+                dimensionY: { value: 2 }
             },
             vertexShader: vertex,
             fragmentShader: fragment
