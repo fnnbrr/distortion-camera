@@ -33,7 +33,7 @@ float binomialCoefficient(int n, int k) {
 }
 
 float bernsteinPolynomial(int i, int l, float s) {
-    return binomialCoefficient(i, l) * pow((1.0 - s), (float(l) - float(i))) * pow(s, float(i));
+    return binomialCoefficient(l, i) * pow((1.0 - s), float(l - i)) * pow(s, float(i));
 }
 
 void main() {
