@@ -21,26 +21,37 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
     }, []);
     
     function createThreeRenderer() : THREE.WebGLRenderer {
-        const camera = new THREE.OrthographicCamera();
+        const camera = new THREE.OrthographicCamera(0, 1, 1, 0);
         camera.position.z = 2;
 
         const scene = new THREE.Scene();
 
         if (videoRef.current === null || drawCanvasRef.current === null) return new THREE.WebGLRenderer();
 
-        const videoTexture = new THREE.VideoTexture(videoRef.current);
+        // const videoTexture = new THREE.VideoTexture(videoRef.current);
+        const videoTexture = new THREE.TextureLoader().load(require("./assets/Checkerboard.png"));
         const drawCanvasTexture = new THREE.CanvasTexture(drawCanvasRef.current)
 
-        const plane = new THREE.PlaneGeometry(2, 2);
+        const plane = new THREE.PlaneGeometry(1, 1);
         const distortionMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 map: { value: videoTexture },
-                distortionMap: { value: drawCanvasTexture }
+                distortionMap: { value: drawCanvasTexture },
+                controlPoints: { value: [
+                        new THREE.Vector2(0, 0),
+                        new THREE.Vector2(0, 1),
+                        new THREE.Vector2(1, 0),
+                        new THREE.Vector2(1, 1),
+                        // Modified control points below
+                        // new THREE.Vector2(0.5, 0.5)
+                    ]}
             },
             vertexShader: vertex,
             fragmentShader: fragment
         });
         const mesh = new THREE.Mesh(plane, distortionMaterial);
+        mesh.position.x = 0.5;
+        mesh.position.y = 0.5;
         scene.add(mesh);
 
         const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -52,7 +63,7 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
 
         const animate = () => {
             requestAnimationFrame(animate);
-            videoTexture.needsUpdate = true;
+            // videoTexture.needsUpdate = true;
             drawCanvasTexture.needsUpdate = true;
             renderer.render(scene, camera);
         }
