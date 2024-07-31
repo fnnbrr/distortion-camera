@@ -69,33 +69,54 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
 
         animate();
 
-        renderer.domElement.addEventListener("mousedown", startDrag);
-        renderer.domElement.addEventListener("mousemove", onDrag);
+        renderer.domElement.addEventListener("mousedown", startDragMouse);
+        renderer.domElement.addEventListener("mousemove", onDragMouse);
         renderer.domElement.addEventListener("mouseup", stopDrag);
+
+        // TODO: add multitouch support?
+        renderer.domElement.addEventListener("touchstart", startDragTouch);
+        renderer.domElement.addEventListener("touchmove", onDragTouch);
+        renderer.domElement.addEventListener("touchend", stopDrag);
+        renderer.domElement.addEventListener("touchcancel", stopDrag);
 
         return renderer;
     }
 
-    function startDrag(event: MouseEvent) {
-        isDragging.current = true;
-        recalculateDrawPosition(event);
+    function startDragMouse(event: MouseEvent) {
+        startDrag(new THREE.Vector2(event.clientX, event.clientY));
     }
 
-    function onDrag(event: MouseEvent) {
+    function startDragTouch(event: TouchEvent) {
+        startDrag(new THREE.Vector2(event.touches[0].clientX, event.touches[0].clientY));
+    }
+    
+    function startDrag(eventViewportPosition: THREE.Vector2) {
+        isDragging.current = true;
+        recalculateDrawPosition(eventViewportPosition);
+    }
+
+    function onDragMouse(event: MouseEvent) {
+        onDrag(new THREE.Vector2(event.clientX, event.clientY));
+    }
+
+    function onDragTouch(event: TouchEvent) {
+        onDrag(new THREE.Vector2(event.touches[0].clientX, event.touches[0].clientY));
+    }
+
+    function onDrag(eventViewportPosition: THREE.Vector2) {
         if (!isDragging.current) return;
         
         const prevDrawPosition = dragPosition.current.clone();
-        recalculateDrawPosition(event);
+        recalculateDrawPosition(eventViewportPosition);
         
         let dragDelta: THREE.Vector2 = dragPosition.current.clone().sub(prevDrawPosition);
         
-        // TODO: modify vertices
+        // TODO: modify vertices in radius with falloff, excluding vertices along edges
+        // (will need mouse position in same coordinate space as vertex positions)
         for ( let i = 0; i < planeVertexPositions.current.count; i ++ ) {
-            
             let x = planeVertexPositions.current.getX(i) + 0.001 * dragDelta.x;
             let y = planeVertexPositions.current.getY(i) - 0.001 * dragDelta.y;
-            // let z = positionAttribute.getZ(i) + 0.1*(Math.random()-0.5);
-            // positionAttribute.setXYZ(i, x, y, z);
+            
             planeVertexPositions.current.setXY(i, x, y);
         }
         
@@ -106,11 +127,11 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
         isDragging.current = false;
     }
 
-    function recalculateDrawPosition(event: MouseEvent) {
+    function recalculateDrawPosition(eventViewportPosition: THREE.Vector2) {
         if (parentRef.current === null) return;
 
-        dragPosition.current.x = event.clientX - parentRef.current.offsetLeft;
-        dragPosition.current.y = event.clientY - parentRef.current.offsetTop;
+        dragPosition.current.x = eventViewportPosition.x - parentRef.current.offsetLeft;
+        dragPosition.current.y = eventViewportPosition.y - parentRef.current.offsetTop;
     }
 
     return (
