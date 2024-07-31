@@ -27,7 +27,7 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
     }, []);
     
     function createThreeRenderer() : THREE.WebGLRenderer {
-        const camera = new THREE.OrthographicCamera();
+        const camera = new THREE.OrthographicCamera(0, 1, 1, 0);
         camera.position.z = 1;
 
         const scene = new THREE.Scene();
@@ -39,19 +39,21 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
         const videoTexture = new THREE.TextureLoader().load(require("./assets/Checkerboard.png"));
         // const drawCanvasTexture = new THREE.CanvasTexture(drawCanvasRef.current)
 
-        const plane = new THREE.PlaneGeometry(2, 2, 10, 10);
+        const plane = new THREE.PlaneGeometry(1, 1, 10, 10);
         planeVertexPositions.current = plane.getAttribute("position") as THREE.BufferAttribute;
         
+        // Provides initial vertex offsets to center the vertex positions on (0.5, 0.5)
         for ( let i = 0; i < planeVertexPositions.current.count; i ++ ) {
-            let x = planeVertexPositions.current.getX(i) + 0.1*(Math.random()-0.5);
-            let y = planeVertexPositions.current.getY(i) + 0.1*(Math.random()-0.5);
-            // let z = positionAttribute.getZ(i) + 0.1*(Math.random()-0.5);
-            // positionAttribute.setXYZ(i, x, y, z);
+            let x = planeVertexPositions.current.getX(i) + 0.5;
+            let y = planeVertexPositions.current.getY(i) + 0.5;
+
             planeVertexPositions.current.setXY(i, x, y);
         }
         
-        const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
-        // const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ wireframe: true }));
+        planeVertexPositions.current.needsUpdate = true;
+        
+        // const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
+        const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ wireframe: true }));
         scene.add(mesh);
 
         const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -92,7 +94,7 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
     
     function startDrag(eventViewportPosition: THREE.Vector2) {
         isDragging.current = true;
-        recalculateDrawPosition(eventViewportPosition);
+        recalculateDragPosition(eventViewportPosition);
     }
 
     function onDragMouse(event: MouseEvent) {
@@ -107,17 +109,23 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
         if (!isDragging.current) return;
         
         const prevDrawPosition = dragPosition.current.clone();
-        recalculateDrawPosition(eventViewportPosition);
+        recalculateDragPosition(eventViewportPosition);
         
         let dragDelta: THREE.Vector2 = dragPosition.current.clone().sub(prevDrawPosition);
         
         // TODO: modify vertices in radius with falloff, excluding vertices along edges
         // (will need mouse position in same coordinate space as vertex positions)
         for ( let i = 0; i < planeVertexPositions.current.count; i ++ ) {
-            let x = planeVertexPositions.current.getX(i) + 0.001 * dragDelta.x;
-            let y = planeVertexPositions.current.getY(i) - 0.001 * dragDelta.y;
             
-            planeVertexPositions.current.setXY(i, x, y);
+            const distance = dragPosition.current.distanceTo(
+                new THREE.Vector2(planeVertexPositions.current.getX(i), planeVertexPositions.current.getY(i)));
+            
+            if (distance < 0.25) {
+                let x = planeVertexPositions.current.getX(i) + dragDelta.x;
+                let y = planeVertexPositions.current.getY(i) + dragDelta.y;
+
+                planeVertexPositions.current.setXY(i, x, y);
+            }
         }
         
         planeVertexPositions.current.needsUpdate = true;
@@ -127,11 +135,11 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
         isDragging.current = false;
     }
 
-    function recalculateDrawPosition(eventViewportPosition: THREE.Vector2) {
+    function recalculateDragPosition(eventViewportPosition: THREE.Vector2) {
         if (parentRef.current === null) return;
 
-        dragPosition.current.x = eventViewportPosition.x - parentRef.current.offsetLeft;
-        dragPosition.current.y = eventViewportPosition.y - parentRef.current.offsetTop;
+        dragPosition.current.x = (eventViewportPosition.x - parentRef.current.offsetLeft) / parentRef.current.clientWidth;
+        dragPosition.current.y = 1.0 - (eventViewportPosition.y - parentRef.current.offsetTop) / parentRef.current.clientHeight;
     }
 
     return (
