@@ -11,7 +11,7 @@ export default function App() {
     return (
         <div className="App">
             <WebcamVideo outVideoRef={videoRef} />
-            <DrawCanvas outDrawCanvasRef={drawCanvasRef} />
+            {/*<DrawCanvas outDrawCanvasRef={drawCanvasRef} />*/}
             <RendererCanvas videoRef={videoRef} drawCanvasRef={drawCanvasRef} />
         </div>
     );
