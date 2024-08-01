@@ -8,9 +8,9 @@ interface RendererCanvasProps {
 
 export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanvasProps) {
     const parentRef = useRef<HTMLDivElement>(null);
-    const isDragging = useRef<boolean>(false);
-    const dragPosition = useRef<THREE.Vector2>(new THREE.Vector2(0, 0));
-    const planeVertexPositions = useRef<THREE.BufferAttribute>(new THREE.BufferAttribute(new Float32Array(0), 3));
+    let isDragging: boolean = false;
+    let dragPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
+    let planeVertexPositions: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
 
     useEffect(() => {
         const renderer = createThreeRenderer();
@@ -40,17 +40,17 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
         // const drawCanvasTexture = new THREE.CanvasTexture(drawCanvasRef.current)
 
         const plane = new THREE.PlaneGeometry(1, 1, 10, 10);
-        planeVertexPositions.current = plane.getAttribute("position") as THREE.BufferAttribute;
+        planeVertexPositions = plane.getAttribute("position") as THREE.BufferAttribute;
         
         // Provides initial vertex offsets to center the vertex positions on (0.5, 0.5)
-        for ( let i = 0; i < planeVertexPositions.current.count; i ++ ) {
-            let x = planeVertexPositions.current.getX(i) + 0.5;
-            let y = planeVertexPositions.current.getY(i) + 0.5;
+        for ( let i = 0; i < planeVertexPositions.count; i ++ ) {
+            let x = planeVertexPositions.getX(i) + 0.5;
+            let y = planeVertexPositions.getY(i) + 0.5;
 
-            planeVertexPositions.current.setXY(i, x, y);
+            planeVertexPositions.setXY(i, x, y);
         }
         
-        planeVertexPositions.current.needsUpdate = true;
+        planeVertexPositions.needsUpdate = true;
         
         // const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
         const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ wireframe: true }));
@@ -93,7 +93,7 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
     }
     
     function startDrag(eventViewportPosition: THREE.Vector2) {
-        isDragging.current = true;
+        isDragging = true;
         recalculateDragPosition(eventViewportPosition);
     }
 
@@ -106,40 +106,40 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
     }
 
     function onDrag(eventViewportPosition: THREE.Vector2) {
-        if (!isDragging.current) return;
+        if (!isDragging) return;
         
-        const prevDrawPosition = dragPosition.current.clone();
+        const prevDrawPosition = dragPosition.clone();
         recalculateDragPosition(eventViewportPosition);
         
-        let dragDelta: THREE.Vector2 = dragPosition.current.clone().sub(prevDrawPosition);
+        let dragDelta: THREE.Vector2 = dragPosition.clone().sub(prevDrawPosition);
         
         // TODO: modify vertices in radius with falloff, excluding vertices along edges
         // (will need mouse position in same coordinate space as vertex positions)
-        for ( let i = 0; i < planeVertexPositions.current.count; i ++ ) {
+        for ( let i = 0; i < planeVertexPositions.count; i ++ ) {
             
-            const distance = dragPosition.current.distanceTo(
-                new THREE.Vector2(planeVertexPositions.current.getX(i), planeVertexPositions.current.getY(i)));
+            const distance = dragPosition.distanceTo(
+                new THREE.Vector2(planeVertexPositions.getX(i), planeVertexPositions.getY(i)));
             
             if (distance < 0.25) {
-                let x = planeVertexPositions.current.getX(i) + dragDelta.x;
-                let y = planeVertexPositions.current.getY(i) + dragDelta.y;
+                let x = planeVertexPositions.getX(i) + dragDelta.x;
+                let y = planeVertexPositions.getY(i) + dragDelta.y;
 
-                planeVertexPositions.current.setXY(i, x, y);
+                planeVertexPositions.setXY(i, x, y);
             }
         }
         
-        planeVertexPositions.current.needsUpdate = true;
+        planeVertexPositions.needsUpdate = true;
     }
 
     function stopDrag() {
-        isDragging.current = false;
+        isDragging = false;
     }
 
     function recalculateDragPosition(eventViewportPosition: THREE.Vector2) {
         if (parentRef.current === null) return;
 
-        dragPosition.current.x = (eventViewportPosition.x - parentRef.current.offsetLeft) / parentRef.current.clientWidth;
-        dragPosition.current.y = 1.0 - (eventViewportPosition.y - parentRef.current.offsetTop) / parentRef.current.clientHeight;
+        dragPosition.x = (eventViewportPosition.x - parentRef.current.offsetLeft) / parentRef.current.clientWidth;
+        dragPosition.y = 1.0 - (eventViewportPosition.y - parentRef.current.offsetTop) / parentRef.current.clientHeight;
     }
 
     return (
