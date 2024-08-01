@@ -113,19 +113,17 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
         
         let dragDelta: THREE.Vector2 = dragPosition.clone().sub(prevDrawPosition);
         
-        // TODO: modify vertices in radius with falloff, excluding vertices along edges
-        // (will need mouse position in same coordinate space as vertex positions)
         for ( let i = 0; i < planeVertexPositions.count; i ++ ) {
+            const vertexPosition: THREE.Vector2 = new THREE.Vector2(planeVertexPositions.getX(i), planeVertexPositions.getY(i));
             
-            const distance = dragPosition.distanceTo(
-                new THREE.Vector2(planeVertexPositions.getX(i), planeVertexPositions.getY(i)));
+            if (isBoundaryVertex(vertexPosition)) continue;
             
-            if (distance < 0.25) {
-                let x = planeVertexPositions.getX(i) + dragDelta.x;
-                let y = planeVertexPositions.getY(i) + dragDelta.y;
+            const intensity = getDragIntensity(vertexPosition);
 
-                planeVertexPositions.setXY(i, x, y);
-            }
+            let x = planeVertexPositions.getX(i) + (intensity * dragDelta.x);
+            let y = planeVertexPositions.getY(i) + (intensity * dragDelta.y);
+
+            planeVertexPositions.setXY(i, x, y);
         }
         
         planeVertexPositions.needsUpdate = true;
@@ -140,6 +138,19 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
 
         dragPosition.x = (eventViewportPosition.x - parentRef.current.offsetLeft) / parentRef.current.clientWidth;
         dragPosition.y = 1.0 - (eventViewportPosition.y - parentRef.current.offsetTop) / parentRef.current.clientHeight;
+    }
+    
+    function getDragIntensity(vertexPosition: THREE.Vector2): number {
+        const distance = dragPosition.distanceTo(vertexPosition);
+        
+        // TODO: can map to a curve to have a more focused drag point
+        const intensity = THREE.MathUtils.inverseLerp(0.25, 0.0, distance);
+        
+        return THREE.MathUtils.clamp(intensity, 0, 1);
+    }
+    
+    function isBoundaryVertex(vertexPosition: THREE.Vector2): boolean {
+        return vertexPosition.x === 0 || vertexPosition.x == 1 || vertexPosition.y === 0 || vertexPosition.y == 1
     }
 
     return (
