@@ -3,19 +3,25 @@ import * as THREE from 'three';
 
 interface RendererCanvasProps {
     videoRef: RefObject<HTMLVideoElement>;
+    resetButtonRef: RefObject<HTMLButtonElement>;
 }
 
-export default function RendererCanvas({ videoRef }: RendererCanvasProps) {
+export default function RendererCanvas({ videoRef, resetButtonRef }: RendererCanvasProps) {
     const parentRef = useRef<HTMLDivElement>(null);
     let isDragging: boolean = false;
     let dragPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
     let planeVertexPositions: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
+    let planeVertexPositionsOriginal: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
 
     useEffect(() => {
         const renderer = createThreeRenderer();
         
         if (parentRef.current !== null) {
             parentRef.current.appendChild(renderer.domElement);
+        }
+        
+        if (resetButtonRef.current !== null) {
+            resetButtonRef.current.onclick = reset;
         }
         
         return () => {
@@ -49,6 +55,7 @@ export default function RendererCanvas({ videoRef }: RendererCanvasProps) {
             planeVertexPositions.setXY(i, x, y);
         }
         
+        planeVertexPositionsOriginal = planeVertexPositions.clone();
         planeVertexPositions.needsUpdate = true;
         
         const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
@@ -150,6 +157,11 @@ export default function RendererCanvas({ videoRef }: RendererCanvasProps) {
     
     function isBoundaryVertex(vertexPosition: THREE.Vector2): boolean {
         return vertexPosition.x === 0 || vertexPosition.x === 1 || vertexPosition.y === 0 || vertexPosition.y === 1
+    }
+    
+    function reset() {
+        planeVertexPositions.copy(planeVertexPositionsOriginal);
+        planeVertexPositions.needsUpdate = true;
     }
 
     return (

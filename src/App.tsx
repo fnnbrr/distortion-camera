@@ -5,11 +5,13 @@ import RendererCanvas from "./RendererCanvas";
 
 export default function App() {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const resetButtonRef = useRef<HTMLButtonElement>(null);
     
     return (
         <div className="App">
             <WebcamVideo outVideoRef={videoRef} />
-            <RendererCanvas videoRef={videoRef} />
+            <RendererCanvas videoRef={videoRef} resetButtonRef={resetButtonRef} />
+            <button ref={resetButtonRef}>reset</button>
         </div>
     );
 }
