@@ -3,10 +3,9 @@ import * as THREE from 'three';
 
 interface RendererCanvasProps {
     videoRef: RefObject<HTMLVideoElement>;
-    drawCanvasRef: RefObject<HTMLCanvasElement>;
 }
 
-export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanvasProps) {
+export default function RendererCanvas({ videoRef }: RendererCanvasProps) {
     const parentRef = useRef<HTMLDivElement>(null);
     let isDragging: boolean = false;
     let dragPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
@@ -33,13 +32,13 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
         const scene = new THREE.Scene();
 
         // TODO: if videoRef is null then just show a placeholder texture
-        // if (videoRef.current === null || drawCanvasRef.current === null) return new THREE.WebGLRenderer();
+        if (videoRef.current === null) return new THREE.WebGLRenderer();
 
-        // const videoTexture = new THREE.VideoTexture(videoRef.current);
-        const videoTexture = new THREE.TextureLoader().load(require("./assets/Checkerboard.png"));
+        const videoTexture = new THREE.VideoTexture(videoRef.current);
+        // const videoTexture = new THREE.TextureLoader().load(require("./assets/Checkerboard.png"));
         // const drawCanvasTexture = new THREE.CanvasTexture(drawCanvasRef.current)
 
-        const plane = new THREE.PlaneGeometry(1, 1, 10, 10);
+        const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
         planeVertexPositions = plane.getAttribute("position") as THREE.BufferAttribute;
         
         // Provides initial vertex offsets to center the vertex positions on (0.5, 0.5)
@@ -52,8 +51,8 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
         
         planeVertexPositions.needsUpdate = true;
         
-        // const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
-        const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ wireframe: true }));
+        const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
+        // const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ wireframe: true }));
         scene.add(mesh);
 
         const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -146,11 +145,11 @@ export default function RendererCanvas({ videoRef, drawCanvasRef }: RendererCanv
         // TODO: can map to a curve to have a more focused drag point
         const intensity = THREE.MathUtils.inverseLerp(0.25, 0.0, distance);
         
-        return THREE.MathUtils.clamp(intensity, 0, 1);
+        return Math.pow(THREE.MathUtils.clamp(intensity, 0, 1), 2);
     }
     
     function isBoundaryVertex(vertexPosition: THREE.Vector2): boolean {
-        return vertexPosition.x === 0 || vertexPosition.x == 1 || vertexPosition.y === 0 || vertexPosition.y == 1
+        return vertexPosition.x === 0 || vertexPosition.x === 1 || vertexPosition.y === 0 || vertexPosition.y === 1
     }
 
     return (
