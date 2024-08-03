@@ -1,27 +1,38 @@
 import './style.css'
 import * as THREE from 'three';
+import {requestWebcam} from "./webcam-video.ts";
 
-const camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5);
-camera.position.z = 1;
+main();
 
-const scene = new THREE.Scene();
+function main(): void {
+    const videoElement = document.querySelector<HTMLVideoElement>('#video');
+    const parent = document.querySelector<HTMLDivElement>('#app');
+    if (videoElement === null || parent === null) {
+        console.error(`Could not find required HTML elements with querySelector`);
+        return;
+    }
+    
+    requestWebcam(videoElement);
 
-const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
-const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ wireframe: true }));
-scene.add(mesh);
+    const camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5);
+    camera.position.z = 1;
 
-const renderer = new THREE.WebGLRenderer({antialias: true});
+    const scene = new THREE.Scene();
+    
+    const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
+    const videoTexture = new THREE.VideoTexture(videoElement);
+    const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
+    scene.add(mesh);
 
-const parent = document.querySelector<HTMLDivElement>('#app');
-
-if (parent !== null) {
+    const renderer = new THREE.WebGLRenderer({antialias: true});
+    
     renderer.setSize(parent.clientWidth, parent.clientHeight);
     parent.appendChild(renderer.domElement);
-}
+        
+    const animate = () => {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
 
-const animate = () => {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
+    animate();
 }
-
-animate();
