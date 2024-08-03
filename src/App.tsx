@@ -9,7 +9,7 @@ export default function App() {
     
     return (
         <div className="App">
-            <WebcamVideo outVideoRef={videoRef} />
+            <WebcamVideo ref={videoRef} />
             <RendererCanvas videoRef={videoRef} resetButtonRef={resetButtonRef} />
             <button ref={resetButtonRef}>reset</button>
         </div>
