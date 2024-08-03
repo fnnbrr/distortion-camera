@@ -1,24 +1,27 @@
 import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import * as THREE from 'three';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+const camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5);
+camera.position.z = 1;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+const scene = new THREE.Scene();
+
+const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
+const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ wireframe: true }));
+scene.add(mesh);
+
+const renderer = new THREE.WebGLRenderer({antialias: true});
+
+const parent = document.querySelector<HTMLDivElement>('#app');
+
+if (parent !== null) {
+    renderer.setSize(parent.clientWidth, parent.clientHeight);
+    parent.appendChild(renderer.domElement);
+}
+
+const animate = () => {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+
+animate();
