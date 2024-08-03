@@ -1,28 +1,25 @@
 import React, { RefObject, useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import './App.css';
 
 interface RendererCanvasProps {
     videoRef: RefObject<HTMLVideoElement>;
-    resetButtonRef: RefObject<HTMLButtonElement>;
 }
 
-export default function RendererCanvas({ videoRef, resetButtonRef }: RendererCanvasProps) {
+export default function RendererCanvas({ videoRef }: RendererCanvasProps) {
     const parentRef = useRef<HTMLDivElement>(null);
+
+    let planeVertexPositions = useRef<THREE.BufferAttribute>(new THREE.BufferAttribute(new Float32Array(0), 3));
+    let planeVertexPositionsOriginal = useRef<THREE.BufferAttribute>(new THREE.BufferAttribute(new Float32Array(0), 3));
     
     useEffect(() => {
         let isDragging: boolean = false;
         let dragPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
-        let planeVertexPositions: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
-        let planeVertexPositionsOriginal: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
         
         const renderer = createThreeRenderer();
         
         if (parentRef.current !== null) {
             parentRef.current.appendChild(renderer.domElement);
-        }
-        
-        if (resetButtonRef.current !== null) {
-            resetButtonRef.current.onclick = reset;
         }
         
         return () => {
@@ -43,19 +40,19 @@ export default function RendererCanvas({ videoRef, resetButtonRef }: RendererCan
             // const drawCanvasTexture = new THREE.CanvasTexture(drawCanvasRef.current)
 
             const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
-            planeVertexPositions = plane.getAttribute("position") as THREE.BufferAttribute;
+            planeVertexPositions.current = plane.getAttribute("position") as THREE.BufferAttribute;
 
             // Provides initial vertex offsets to center the vertex positions on (0.5, 0.5)
-            for ( let i = 0; i < planeVertexPositions.count; i ++ ) {
-                let x = planeVertexPositions.getX(i) + 0.5;
-                let y = planeVertexPositions.getY(i) + 0.5;
+            for ( let i = 0; i < planeVertexPositions.current.count; i ++ ) {
+                let x = planeVertexPositions.current.getX(i) + 0.5;
+                let y = planeVertexPositions.current.getY(i) + 0.5;
 
-                planeVertexPositions.setXY(i, x, y);
+                planeVertexPositions.current.setXY(i, x, y);
             }
-
-            planeVertexPositionsOriginal = planeVertexPositions.clone();
-            planeVertexPositions.needsUpdate = true;
-
+            
+            planeVertexPositions.current.needsUpdate = true;
+            planeVertexPositionsOriginal.current = planeVertexPositions.current.clone();
+            
             const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
             // const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ wireframe: true }));
             scene.add(mesh);
@@ -117,20 +114,21 @@ export default function RendererCanvas({ videoRef, resetButtonRef }: RendererCan
 
             let dragDelta: THREE.Vector2 = dragPosition.clone().sub(prevDrawPosition);
 
-            for ( let i = 0; i < planeVertexPositions.count; i ++ ) {
-                const vertexPosition: THREE.Vector2 = new THREE.Vector2(planeVertexPositions.getX(i), planeVertexPositions.getY(i));
+            for ( let i = 0; i < planeVertexPositions.current.count; i ++ ) {
+                const vertexPosition: THREE.Vector2 = new THREE.Vector2(planeVertexPositions.current.getX(i), 
+                    planeVertexPositions.current.getY(i));
 
                 if (isBoundaryVertex(vertexPosition)) continue;
 
                 const intensity = getDragIntensity(vertexPosition);
 
-                let x = planeVertexPositions.getX(i) + (intensity * dragDelta.x);
-                let y = planeVertexPositions.getY(i) + (intensity * dragDelta.y);
+                let x = planeVertexPositions.current.getX(i) + (intensity * dragDelta.x);
+                let y = planeVertexPositions.current.getY(i) + (intensity * dragDelta.y);
 
-                planeVertexPositions.setXY(i, x, y);
+                planeVertexPositions.current.setXY(i, x, y);
             }
 
-            planeVertexPositions.needsUpdate = true;
+            planeVertexPositions.current.needsUpdate = true;
         }
 
         function stopDrag() {
@@ -146,8 +144,7 @@ export default function RendererCanvas({ videoRef, resetButtonRef }: RendererCan
 
         function getDragIntensity(vertexPosition: THREE.Vector2): number {
             const distance = dragPosition.distanceTo(vertexPosition);
-
-            // TODO: can map to a curve to have a more focused drag point
+            
             const intensity = THREE.MathUtils.inverseLerp(0.25, 0.0, distance);
 
             return Math.pow(THREE.MathUtils.clamp(intensity, 0, 1), 2);
@@ -156,17 +153,24 @@ export default function RendererCanvas({ videoRef, resetButtonRef }: RendererCan
         function isBoundaryVertex(vertexPosition: THREE.Vector2): boolean {
             return vertexPosition.x === 0 || vertexPosition.x === 1 || vertexPosition.y === 0 || vertexPosition.y === 1
         }
+    }, [videoRef]);
 
-        function reset() {
-            planeVertexPositions.copy(planeVertexPositionsOriginal);
-            planeVertexPositions.needsUpdate = true;
-        }
-    }, [videoRef, resetButtonRef]);
+    function reset() {
+        // TODO: spring vertices back to rest positions
+        planeVertexPositions.current.copy(planeVertexPositionsOriginal.current);
+        planeVertexPositions.current.needsUpdate = true;
+    }
+    
+    function takePhoto() {
+        // TODO: save photo
+    }
     
     return (
         <div
             ref={parentRef}
-            style={{width: "100%", height: "100%"}}
-        ></div>
+            style={{width: "100%", height: "100%"}}>
+            <button onClick={reset} className={"reset-button"}>reset</button>
+            <button onClick={takePhoto} className={"photo-button"}>take photo</button>
+        </div>
     );
 }
