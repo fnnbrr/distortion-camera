@@ -2,24 +2,32 @@
 
 export class DistortionMesh {
     parent: HTMLElement;
+    
     isDragging: boolean = false;
     dragPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
+    
     planeVertexPositions: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
     planeVertexPositionsOriginal: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
+
+    scene: THREE.Scene;
+    camera: THREE.Camera;
+    renderer: THREE.WebGLRenderer;
     
     constructor(videoElement: HTMLVideoElement, parent: HTMLElement) {
         this.parent = parent;
-        const camera = new THREE.OrthographicCamera(0, 1, 1, 0);
-        camera.position.z = 1;
+        
+        this.scene = new THREE.Scene();
 
-        const scene = new THREE.Scene();
+        this.camera = new THREE.OrthographicCamera(0, 1, 1, 0);
+        this.camera.position.z = 1;
 
         const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
-        this.planeVertexPositions = plane.getAttribute("position") as THREE.BufferAttribute;
         const videoTexture = new THREE.VideoTexture(videoElement);
         const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
-        scene.add(mesh);
+        this.scene.add(mesh);
 
+        this.planeVertexPositions = plane.getAttribute("position") as THREE.BufferAttribute;
+        
         // Provides initial vertex offsets to center the vertex positions on (0.5, 0.5)
         for ( let i = 0; i < this.planeVertexPositions.count; i ++ ) {
             let x = this.planeVertexPositions.getX(i) + 0.5;
@@ -31,14 +39,14 @@ export class DistortionMesh {
         this.planeVertexPositions.needsUpdate = true;
         this.planeVertexPositionsOriginal = this.planeVertexPositions.clone();
 
-        const renderer = new THREE.WebGLRenderer({antialias: true});
+        this.renderer = new THREE.WebGLRenderer({antialias: true});
 
-        renderer.setSize(parent.clientWidth, parent.clientHeight);
-        parent.appendChild(renderer.domElement);
+        this.renderer.setSize(parent.clientWidth, parent.clientHeight);
+        parent.appendChild(this.renderer.domElement);
 
         const animate = () => {
             requestAnimationFrame(animate);
-            renderer.render(scene, camera);
+            this.renderer.render(this.scene, this.camera);
         }
 
         animate();
@@ -49,16 +57,16 @@ export class DistortionMesh {
         this.stopDrag = this.stopDrag.bind(this);
         this.startDragTouch = this.startDragTouch.bind(this);
         this.onDragTouch = this.onDragTouch.bind(this);
-        
-        renderer.domElement.addEventListener("mousedown", this.startDragMouse);
-        renderer.domElement.addEventListener("mousemove", this.onDragMouse);
-        renderer.domElement.addEventListener("mouseup", this.stopDrag);
+
+        this.renderer.domElement.addEventListener("mousedown", this.startDragMouse);
+        this.renderer.domElement.addEventListener("mousemove", this.onDragMouse);
+        this.renderer.domElement.addEventListener("mouseup", this.stopDrag);
         
         // TODO: add multitouch support?
-        renderer.domElement.addEventListener("touchstart", this.startDragTouch);
-        renderer.domElement.addEventListener("touchmove", this.onDragTouch);
-        renderer.domElement.addEventListener("touchend", this.stopDrag);
-        renderer.domElement.addEventListener("touchcancel", this.stopDrag);
+        this.renderer.domElement.addEventListener("touchstart", this.startDragTouch);
+        this.renderer.domElement.addEventListener("touchmove", this.onDragTouch);
+        this.renderer.domElement.addEventListener("touchend", this.stopDrag);
+        this.renderer.domElement.addEventListener("touchcancel", this.stopDrag);
     }
     
     startDragMouse(event: MouseEvent) {
@@ -132,5 +140,14 @@ export class DistortionMesh {
         // TODO: spring vertices back to rest positions
         this.planeVertexPositions.copy(this.planeVertexPositionsOriginal);
         this.planeVertexPositions.needsUpdate = true;
+    }
+    
+    takePhoto() {
+        const link = document.createElement('a');
+        link.download = 'distortion-camera-photo.png';
+        this.renderer.render(this.scene, this.camera);  // Need to render before taking screenshot: https://stackoverflow.com/a/30647502
+        link.href = this.renderer.domElement.toDataURL("image/png");
+        link.click();
+        link.remove();
     }
 }

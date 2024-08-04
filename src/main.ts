@@ -22,5 +22,5 @@ function main(): void {
     const distortionMesh = new DistortionMesh(video, parent);
     
     resetButton.addEventListener("click", () => distortionMesh.resetVertices());
-    photoButton.addEventListener("click", () => console.warn("TODO take photo"));
+    photoButton.addEventListener("click", () => distortionMesh.takePhoto());
 }
