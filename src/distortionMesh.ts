@@ -1,4 +1,5 @@
 ﻿import * as THREE from "three";
+import * as TWEEN from '@tweenjs/tween.js';
 
 export class DistortionMesh {
     parent: HTMLElement;
@@ -140,9 +141,37 @@ export class DistortionMesh {
     }
     
     resetVertices() {
-        // TODO: spring vertices back to rest positions
-        this.planeVertexPositions.copy(this.planeVertexPositionsOriginal);
-        this.planeVertexPositions.needsUpdate = true;
+        const planeVertexPositionsDistorted: THREE.BufferAttribute = this.planeVertexPositions.clone();
+        
+        const interpolation= { value: 0.0 };
+
+        const resetTween = new TWEEN.Tween(interpolation)
+            .to({ value: 1.0 }, 1250)
+            .easing(TWEEN.Easing.Elastic.Out)
+            .onUpdate(() => {
+                for ( let i = 0; i < this.planeVertexPositions.count; i ++ ) {
+                    let x = this.planeVertexPositions.getX(i) + 0.5;
+                    let y = this.planeVertexPositions.getY(i) + 0.5;
+                    
+                    x = THREE.MathUtils.lerp(planeVertexPositionsDistorted.getX(i), this.planeVertexPositionsOriginal.getX(i), interpolation.value);
+                    y = THREE.MathUtils.lerp(planeVertexPositionsDistorted.getY(i), this.planeVertexPositionsOriginal.getY(i), interpolation.value);
+
+                    this.planeVertexPositions.setXY(i, x, y);
+                }
+
+                this.planeVertexPositions.needsUpdate = true;
+            })
+            .start();
+
+        function animate(time: number) {
+            resetTween.update(time);
+            
+            if (resetTween.isPlaying()) {
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        requestAnimationFrame(animate);
     }
     
     takePhoto() {
