@@ -127,4 +127,10 @@ export class DistortionMesh {
     isBoundaryVertex(vertexPosition: THREE.Vector2): boolean {
         return vertexPosition.x === 0 || vertexPosition.x === 1 || vertexPosition.y === 0 || vertexPosition.y === 1
     }
+    
+    resetVertices() {
+        // TODO: spring vertices back to rest positions
+        this.planeVertexPositions.copy(this.planeVertexPositionsOriginal);
+        this.planeVertexPositions.needsUpdate = true;
+    }
 }
