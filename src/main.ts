@@ -1,7 +1,7 @@
 import './style.css'
 import {requestWebcam} from "./webcam-video.ts";
 import {DistortionMesh} from "./distortionMesh.ts";
-import viteLogo from "../public/vite.svg";
+import viteLogo from "./assets/vite.svg"
 
 main();
 

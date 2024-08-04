@@ -23,6 +23,7 @@ export class DistortionMesh {
 
         const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
         const videoTexture = new THREE.VideoTexture(videoElement);
+        videoTexture.colorSpace = THREE.SRGBColorSpace;  // Necessary to preserve correct colors
         const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
         this.scene.add(mesh);
 
@@ -105,6 +106,8 @@ export class DistortionMesh {
             if (this.isBoundaryVertex(vertexPosition)) continue;
 
             const intensity = this.getDragIntensity(vertexPosition);
+            
+            if (intensity < 0.01) continue;
 
             let x = this.planeVertexPositions.getX(i) + (intensity * dragDelta.x);
             let y = this.planeVertexPositions.getY(i) + (intensity * dragDelta.y);

@@ -4,7 +4,15 @@
         return;
     }
     
-    navigator.mediaDevices.getUserMedia({video: true})
+    const constraints: MediaStreamConstraints = {
+        video: { 
+            width: 1280,
+            height: 720,
+            facingMode: "user"
+        }
+    };
+    
+    navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
             videoElement.srcObject = stream;
             videoElement.play()
