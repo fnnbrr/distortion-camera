@@ -13,6 +13,7 @@ export class DistortionMesh {
     scene: THREE.Scene;
     camera: THREE.Camera;
     renderer: THREE.WebGLRenderer;
+    videoTexture: THREE.VideoTexture;
     
     constructor(videoElement: HTMLVideoElement, parent: HTMLElement) {
         this.parent = parent;
@@ -23,9 +24,10 @@ export class DistortionMesh {
         this.camera.position.z = 1;
 
         const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
-        const videoTexture = new THREE.VideoTexture(videoElement);
-        videoTexture.colorSpace = THREE.SRGBColorSpace;  // Necessary to preserve correct colors
-        const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: videoTexture }));
+        this.videoTexture = new THREE.VideoTexture(videoElement);
+        this.videoTexture.colorSpace = THREE.SRGBColorSpace;  // Necessary to preserve correct colors
+        this.videoTexture.wrapS = THREE.RepeatWrapping;  // Allows setting the repeat x scale to -1 to mirror horizontally
+        const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: this.videoTexture }));
         this.scene.add(mesh);
 
         this.planeVertexPositions = plane.getAttribute("position") as THREE.BufferAttribute;
@@ -172,6 +174,15 @@ export class DistortionMesh {
         }
         
         requestAnimationFrame(animate);
+    }
+    
+    updateMirroring(capabilities: MediaTrackCapabilities) {
+        if (capabilities.facingMode?.includes("environment")) {
+            this.videoTexture.repeat.x = 1;
+        }
+        else {
+            this.videoTexture.repeat.x = -1;
+        }
     }
     
     takePhoto() {

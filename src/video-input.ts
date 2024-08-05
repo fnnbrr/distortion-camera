@@ -23,7 +23,9 @@
         }
     }
     
-    async startNextVideoDevice() {
+    async startNextVideoDevice(): Promise<MediaTrackCapabilities> {
+        let deviceCapabilities: MediaTrackCapabilities = {};
+        
         try {
             // Clean up previous stream
             this.#stream.getTracks().forEach(track => track.stop());
@@ -35,6 +37,7 @@
             this.#stream = await navigator.mediaDevices.getUserMedia(this.#constraints);
             this.#video.srcObject = this.#stream;
             this.#video.play()
+                .then(() => { deviceCapabilities = this.#stream.getTracks()[0].getCapabilities() })
                 .catch(err => console.error(`Error playing video: ${err}`));
 
             if (!this.#hasQueriedVideoDevices) {
@@ -43,6 +46,8 @@
         } catch (e) {
             console.error(`Error accessing video device: ${e}`);
         }
+        
+        return deviceCapabilities;
     }
     
     hasMultipleVideoDevices(): boolean {

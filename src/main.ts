@@ -27,10 +27,12 @@ async function main() {
     photoButton.addEventListener("click", () => distortionMesh.takePhoto());
     
     try {
-        await videoInput.startNextVideoDevice();
+        distortionMesh.updateMirroring(await videoInput.startNextVideoDevice());
         
         if (videoInput.hasMultipleVideoDevices()) {
-            swapCameraButton.addEventListener("click", () => videoInput.startNextVideoDevice());
+            swapCameraButton.addEventListener("click", async () => {
+                distortionMesh.updateMirroring(await videoInput.startNextVideoDevice());
+            });
         }
         else {
             swapCameraButton.remove();
