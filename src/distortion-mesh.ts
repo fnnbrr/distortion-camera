@@ -44,9 +44,11 @@ export class DistortionMesh {
         this.planeVertexPositionsOriginal = this.planeVertexPositions.clone();
 
         this.renderer = new THREE.WebGLRenderer({antialias: true});
-
-        this.renderer.setSize(parent.clientWidth, parent.clientHeight);
-        parent.appendChild(this.renderer.domElement);
+        
+        this.parent.appendChild(this.renderer.domElement);
+        this.onWindowResize = this.onWindowResize.bind(this);
+        window.addEventListener("resize", this.onWindowResize);
+        this.onWindowResize();
 
         const animate = () => {
             requestAnimationFrame(animate);
@@ -192,5 +194,9 @@ export class DistortionMesh {
         link.href = this.renderer.domElement.toDataURL("image/png");
         link.click();
         link.remove();
+    }
+
+    onWindowResize() {
+        this.renderer.setSize(this.parent.clientWidth, this.parent.clientHeight);
     }
 }
