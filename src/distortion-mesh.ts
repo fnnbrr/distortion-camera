@@ -203,24 +203,27 @@ export class DistortionMesh {
     }
 
     resize() {
+        this.renderer.setSize(this.parent.clientWidth, this.parent.clientHeight);
+        
         const videoAspectRatio = this.videoElement.videoWidth / this.videoElement.videoHeight;
         const rendererAspectRatio = this.parent.clientWidth / this.parent.clientHeight;
         
-        const repeatSign = Math.sign(this.videoTexture.repeat.x);
+        const xRepeatSign = Math.sign(this.videoTexture.repeat.x);
         
         if (videoAspectRatio > rendererAspectRatio) {
-            // Either rescale the texture to crop horizontally...
-            this.videoTexture.repeat.x = repeatSign * (rendererAspectRatio / videoAspectRatio);
+            this.videoTexture.repeat.x = xRepeatSign * (rendererAspectRatio / videoAspectRatio);
             this.videoTexture.offset.x = (1 - this.videoTexture.repeat.x) / 2;
             
-            this.renderer.setSize(this.parent.clientWidth, this.parent.clientHeight);
+            this.videoTexture.repeat.y = 1;
+            this.videoTexture.offset.y = 0;
+            
         }
         else {
-            this.videoTexture.repeat.x = repeatSign;
+            this.videoTexture.repeat.x = xRepeatSign;
             this.videoTexture.offset.x = 0;
 
-            // ... or add pillarboxes to the renderer to avoid horizontal stretching
-            this.renderer.setSize(this.parent.clientHeight * videoAspectRatio, this.parent.clientHeight);
+            this.videoTexture.repeat.y = videoAspectRatio / rendererAspectRatio;
+            this.videoTexture.offset.y = (1 - this.videoTexture.repeat.y) / 2;
         }
     }
 }
