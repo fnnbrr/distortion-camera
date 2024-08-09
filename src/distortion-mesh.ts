@@ -63,6 +63,7 @@ export class DistortionMesh {
         this.renderer.domElement.addEventListener("mousedown", this.startDragMouse);
         this.renderer.domElement.addEventListener("mousemove", this.onDragMouse);
         this.renderer.domElement.addEventListener("mouseup", this.stopDrag);
+        this.renderer.domElement.addEventListener("mouseleave", this.stopDrag);
         
         // TODO: add multitouch support?
         this.renderer.domElement.addEventListener("touchstart", this.startDragTouch);
@@ -135,6 +136,8 @@ export class DistortionMesh {
     }
 
     stopDrag() {
+        if (!this.isDragging) return;
+        
         this.isDragging = false;
     }
 
