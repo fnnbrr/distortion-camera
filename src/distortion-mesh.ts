@@ -9,6 +9,7 @@ export class DistortionMesh {
     
     planeVertexPositions: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
     planeVertexPositionsOriginal: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
+    resetTween: TWEEN.Tween = new TWEEN.Tween({});
 
     scene: THREE.Scene;
     camera: THREE.Camera;
@@ -44,18 +45,13 @@ export class DistortionMesh {
         this.planeVertexPositionsOriginal = this.planeVertexPositions.clone();
 
         this.renderer = new THREE.WebGLRenderer({antialias: true});
+
+        this.animate(0);
         
         this.parent.appendChild(this.renderer.domElement);
         this.onWindowResize = this.onWindowResize.bind(this);
         window.addEventListener("resize", this.onWindowResize);
         this.onWindowResize();
-
-        const animate = () => {
-            requestAnimationFrame(animate);
-            this.renderer.render(this.scene, this.camera);
-        }
-
-        animate();
         
         // Necessary bindings to preserve reference to this
         this.startDragMouse = this.startDragMouse.bind(this);
@@ -74,6 +70,15 @@ export class DistortionMesh {
         this.renderer.domElement.addEventListener("touchend", this.stopDrag);
         this.renderer.domElement.addEventListener("touchcancel", this.stopDrag);
     }
+
+    animate = (time: number) => {
+        requestAnimationFrame(this.animate);
+        this.renderer.render(this.scene, this.camera);
+        
+        if (this.resetTween.isPlaying()) {
+            this.resetTween.update(time);
+        }
+    }
     
     startDragMouse(event: MouseEvent) {
         this.startDrag(new THREE.Vector2(event.clientX, event.clientY));
@@ -86,6 +91,10 @@ export class DistortionMesh {
     startDrag(eventViewportPosition: THREE.Vector2) {
         this.isDragging = true;
         this.recalculateDragPosition(eventViewportPosition);
+        
+        if (this.resetTween.isPlaying()) {
+            this.resetTween.stop();
+        }
     }
 
     onDragMouse(event: MouseEvent) {
@@ -149,7 +158,7 @@ export class DistortionMesh {
         
         const interpolation= { value: 0.0 };
 
-        const resetTween = new TWEEN.Tween(interpolation)
+        this.resetTween = new TWEEN.Tween(interpolation)
             .to({ value: 1.0 }, 1250)
             .easing(TWEEN.Easing.Elastic.Out)
             .onUpdate(() => {
@@ -166,16 +175,6 @@ export class DistortionMesh {
                 this.planeVertexPositions.needsUpdate = true;
             })
             .start();
-
-        function animate(time: number) {
-            resetTween.update(time);
-            
-            if (resetTween.isPlaying()) {
-                requestAnimationFrame(animate);
-            }
-        }
-        
-        requestAnimationFrame(animate);
     }
     
     updateMirroring(capabilities: MediaTrackCapabilities) {
