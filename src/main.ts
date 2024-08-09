@@ -1,6 +1,7 @@
 import './style.css'
 import {VideoInput} from "./video-input.ts";
 import {DistortionMesh} from "./distortion-mesh.ts";
+import cameraIcon from "./assets/photo-camera-svgrepo-com.svg";
 import cameraSwitchIcon from "./assets/camera-switch-svgrepo-com.svg";
 import deleteIcon from "./assets/delete-svgrepo-com.svg";
 
@@ -8,7 +9,7 @@ main();
 
 async function main() {
     document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-    <video id="video" playsInline poster="${cameraSwitchIcon}"></video>
+    <video id="video" playsInline poster="${cameraIcon}"></video>
     <button id="reset-button"><img src="${deleteIcon}"></button>
     <button id="photo-button">take photo</button>
     <button id="swap-camera-button"><img src="${cameraSwitchIcon}"></button>
