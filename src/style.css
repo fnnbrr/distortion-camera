@@ -26,6 +26,7 @@ html, body, #app {
     margin: 0;
     width: 100%;
     height: 100%;
+    overscroll-behavior: contain;  /* Must be set on html AND body to work in an iframe: https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior#description */
 }
 
 #video {
