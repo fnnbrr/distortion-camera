@@ -15,8 +15,9 @@ export class DistortionMesh {
     camera: THREE.Camera;
     renderer: THREE.WebGLRenderer;
     videoTexture: THREE.VideoTexture;
+    videoElement: HTMLVideoElement;
     
-    constructor(videoElement: HTMLVideoElement, parent: HTMLElement) {
+    constructor(videoElement: HTMLVideoElement, parent: HTMLElement, outputCanvas: HTMLCanvasElement) {
         this.parent = parent;
         
         this.scene = new THREE.Scene();
@@ -24,8 +25,9 @@ export class DistortionMesh {
         this.camera = new THREE.OrthographicCamera(0, 1, 1, 0);
         this.camera.position.z = 1;
 
+        this.videoElement = videoElement;
         const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
-        this.videoTexture = new THREE.VideoTexture(videoElement);
+        this.videoTexture = new THREE.VideoTexture(this.videoElement);
         this.videoTexture.colorSpace = THREE.SRGBColorSpace;  // Necessary to preserve correct colors
         this.videoTexture.wrapS = THREE.RepeatWrapping;  // Allows setting the repeat x scale to -1 to mirror horizontally
         const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: this.videoTexture }));
@@ -44,14 +46,12 @@ export class DistortionMesh {
         this.planeVertexPositions.needsUpdate = true;
         this.planeVertexPositionsOriginal = this.planeVertexPositions.clone();
 
-        this.renderer = new THREE.WebGLRenderer({antialias: true});
-
-        this.animate(0);
+        this.renderer = new THREE.WebGLRenderer({antialias: true, canvas: outputCanvas});
         
-        this.parent.appendChild(this.renderer.domElement);
-        this.onWindowResize = this.onWindowResize.bind(this);
-        window.addEventListener("resize", this.onWindowResize);
-        this.onWindowResize();
+        this.resize = this.resize.bind(this);
+        window.addEventListener("resize", this.resize);
+        this.videoElement.addEventListener("resize", this.resize);
+        this.resize();
         
         // Necessary bindings to preserve reference to this
         this.startDragMouse = this.startDragMouse.bind(this);
@@ -69,6 +69,8 @@ export class DistortionMesh {
         this.renderer.domElement.addEventListener("touchmove", this.onDragTouch);
         this.renderer.domElement.addEventListener("touchend", this.stopDrag);
         this.renderer.domElement.addEventListener("touchcancel", this.stopDrag);
+
+        this.animate(0);
     }
 
     animate = (time: number) => {
@@ -184,6 +186,8 @@ export class DistortionMesh {
         else {
             this.videoTexture.repeat.x = -1;
         }
+        
+        this.resize();
     }
     
     takePhoto() {
@@ -195,7 +199,25 @@ export class DistortionMesh {
         link.remove();
     }
 
-    onWindowResize() {
-        this.renderer.setSize(this.parent.clientWidth, this.parent.clientHeight);
+    resize() {
+        const videoAspectRatio = this.videoElement.videoWidth / this.videoElement.videoHeight;
+        const rendererAspectRatio = this.parent.clientWidth / this.parent.clientHeight;
+        
+        const repeatSign = Math.sign(this.videoTexture.repeat.x);
+        
+        if (videoAspectRatio > rendererAspectRatio) {
+            // Either rescale the texture to crop horizontally...
+            this.videoTexture.repeat.x = repeatSign * (rendererAspectRatio / videoAspectRatio);
+            this.videoTexture.offset.x = (1 - this.videoTexture.repeat.x) / 2;
+            
+            this.renderer.setSize(this.parent.clientWidth, this.parent.clientHeight);
+        }
+        else {
+            this.videoTexture.repeat.x = repeatSign;
+            this.videoTexture.offset.x = 0;
+
+            // ... or add pillarboxes to the renderer to avoid horizontal stretching
+            this.renderer.setSize(this.parent.clientHeight * videoAspectRatio, this.parent.clientHeight);
+        }
     }
 }
