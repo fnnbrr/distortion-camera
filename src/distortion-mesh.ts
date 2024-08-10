@@ -6,6 +6,9 @@ export class DistortionMesh {
     
     isDragging: boolean = false;
     dragPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
+    dragDelta: THREE.Vector2 = new THREE.Vector2(0, 0);
+    
+    dragStopTweens: TWEEN.Tween[] = [];
     
     planeVertexPositions: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
     planeVertexPositionsOriginal: THREE.BufferAttribute = new THREE.BufferAttribute(new Float32Array(0), 3);
@@ -81,6 +84,15 @@ export class DistortionMesh {
         if (this.resetTween.isPlaying()) {
             this.resetTween.update(time);
         }
+
+        for (let i = this.dragStopTweens.length - 1; i >= 0; i--) {
+            if (this.dragStopTweens[i].isPlaying()) {
+                this.dragStopTweens[i].update(time);
+            }
+            else {
+                this.dragStopTweens.splice(i, 1);
+            }
+        }
     }
     
     startDragMouse(event: MouseEvent) {
@@ -94,6 +106,7 @@ export class DistortionMesh {
     startDrag(eventViewportPosition: THREE.Vector2) {
         this.isDragging = true;
         this.recalculateDragPosition(eventViewportPosition);
+        this.dragDelta = new THREE.Vector2(0, 0);
         
         if (this.resetTween.isPlaying()) {
             this.resetTween.stop();
@@ -114,15 +127,32 @@ export class DistortionMesh {
         const prevDrawPosition = this.dragPosition.clone();
         this.recalculateDragPosition(eventViewportPosition);
 
-        let dragDelta: THREE.Vector2 = this.dragPosition.clone().sub(prevDrawPosition);
+        this.dragDelta = this.dragPosition.clone().sub(prevDrawPosition);
 
+        this.applyDragToVertices(this.dragPosition, this.dragDelta);
+    }
+
+    stopDrag() {
+        if (!this.isDragging) return;
+        
+        this.isDragging = false;
+        
+        this.animateDragStop();
+    }
+
+    recalculateDragPosition(eventViewportPosition: THREE.Vector2) {
+        this.dragPosition.x = (eventViewportPosition.x - this.parent.offsetLeft) / this.parent.clientWidth;
+        this.dragPosition.y = 1.0 - (eventViewportPosition.y - this.parent.offsetTop) / this.parent.clientHeight;
+    }
+
+    applyDragToVertices(dragPosition: THREE.Vector2, dragDelta: THREE.Vector2) {
         for ( let i = 0; i < this.planeVertexPositions.count; i ++ ) {
             const vertexPosition: THREE.Vector2 = new THREE.Vector2(this.planeVertexPositions.getX(i),
                 this.planeVertexPositions.getY(i));
 
             if (this.isBoundaryVertex(vertexPosition)) continue;
 
-            const intensity = this.getDragIntensity(vertexPosition);
+            const intensity = this.getDragIntensity(dragPosition, vertexPosition);
             
             if (intensity < 0.01) continue;
 
@@ -135,19 +165,8 @@ export class DistortionMesh {
         this.planeVertexPositions.needsUpdate = true;
     }
 
-    stopDrag() {
-        if (!this.isDragging) return;
-        
-        this.isDragging = false;
-    }
-
-    recalculateDragPosition(eventViewportPosition: THREE.Vector2) {
-        this.dragPosition.x = (eventViewportPosition.x - this.parent.offsetLeft) / this.parent.clientWidth;
-        this.dragPosition.y = 1.0 - (eventViewportPosition.y - this.parent.offsetTop) / this.parent.clientHeight;
-    }
-
-    getDragIntensity(vertexPosition: THREE.Vector2): number {
-        const distance = this.dragPosition.distanceTo(vertexPosition);
+    getDragIntensity(dragPosition: THREE.Vector2, vertexPosition: THREE.Vector2): number {
+        const distance = dragPosition.distanceTo(vertexPosition);
 
         const intensity = THREE.MathUtils.inverseLerp(0.25, 0.0, distance);
 
@@ -158,7 +177,25 @@ export class DistortionMesh {
         return vertexPosition.x === 0 || vertexPosition.x === 1 || vertexPosition.y === 0 || vertexPosition.y === 1
     }
     
+    animateDragStop() {
+        const interpolation= { value: 5.0 };
+        const dragPosition = this.dragPosition.clone();
+        const dragDelta = this.dragDelta.clone();
+        
+        this.dragStopTweens.push(
+            new TWEEN.Tween(interpolation)
+                .to({ value: 0.0 }, 750)
+                .easing(TWEEN.Easing.Elastic.Out)
+                .onUpdate(() => {
+                    this.applyDragToVertices(dragPosition, dragDelta.clone().multiplyScalar(interpolation.value));
+                })
+                .start()
+        );
+    }
+    
     resetVertices() {
+        this.dragStopTweens.forEach(tween => tween.stop());
+        
         const planeVertexPositionsDistorted: THREE.BufferAttribute = this.planeVertexPositions.clone();
         
         const interpolation= { value: 0.0 };
