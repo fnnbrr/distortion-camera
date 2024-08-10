@@ -1,5 +1,5 @@
-﻿import fullscreenIcon from "./assets/fullscreen-svgrepo-com.svg";
-import fullscreenExitIcon from "./assets/fullscreen-exit-svgrepo-com.svg";
+﻿import fullscreenIcon from "./assets/images/fullscreen-svgrepo-com.svg";
+import fullscreenExitIcon from "./assets/images/fullscreen-exit-svgrepo-com.svg";
 
 export class FullscreenController {
     private buttonImage: HTMLImageElement;

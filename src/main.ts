@@ -2,9 +2,9 @@ import './style.css'
 import {VideoInput} from "./video-input.ts";
 import {VideoPlaneRenderer} from "./video-plane-renderer.ts";
 import {VideoRendererSizer} from "./video-renderer-sizer.ts";
-import cameraIcon from "./assets/photo-camera-svgrepo-com.svg";
-import cameraSwitchIcon from "./assets/camera-switch-svgrepo-com.svg";
-import deleteIcon from "./assets/delete-svgrepo-com.svg";
+import cameraIcon from "./assets/images/photo-camera-svgrepo-com.svg";
+import cameraSwitchIcon from "./assets/images/camera-switch-svgrepo-com.svg";
+import deleteIcon from "./assets/images/delete-svgrepo-com.svg";
 import {PlaneDistortionController} from "./plane-distortion-controller.ts";
 import {DragInputHandler} from "./drag-input-handler.ts";
 import {FullscreenController} from "./fullscreen-controller.ts";
