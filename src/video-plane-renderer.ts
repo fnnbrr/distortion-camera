@@ -1,5 +1,6 @@
 ﻿import * as THREE from "three";
 import * as TWEEN from "@tweenjs/tween.js";
+import {AudioListenerManager} from "./audio-listener-manager.ts";
 
 export class VideoPlaneRenderer {
     parent: HTMLElement;
@@ -33,6 +34,8 @@ export class VideoPlaneRenderer {
         this.overlayMaterial = new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 1, 1), opacity: 0, transparent: true });
         const overlayMesh = new THREE.Mesh(plane, this.overlayMaterial);
         this.scene.add(overlayMesh);
+        
+        this.scene.add(AudioListenerManager.instance);
 
         this.planeVertexPositions = plane.getAttribute("position") as THREE.BufferAttribute;
         
