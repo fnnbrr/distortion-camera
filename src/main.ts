@@ -1,10 +1,12 @@
 import './style.css'
 import {VideoInput} from "./video-input.ts";
-import {DistortionMesh} from "./distortion-mesh.ts";
+import {VideoPlaneRenderer} from "./video-plane-renderer.ts";
 import {VideoRendererSizer} from "./video-renderer-sizer.ts";
 import cameraIcon from "./assets/photo-camera-svgrepo-com.svg";
 import cameraSwitchIcon from "./assets/camera-switch-svgrepo-com.svg";
 import deleteIcon from "./assets/delete-svgrepo-com.svg";
+import {PlaneDistortionController} from "./plane-distortion-controller.ts";
+import {DragInputHandler} from "./drag-input-handler.ts";
 
 main();
 
@@ -25,10 +27,13 @@ async function main() {
     const swapCameraButton = document.querySelector<HTMLButtonElement>('#swap-camera-button') as HTMLButtonElement;
     
     const videoInput = new VideoInput(video);
-    const distortionMesh = new DistortionMesh(video, parent, canvas);
+    const distortionMesh = new VideoPlaneRenderer(video, parent, canvas);
+    const planeDistortionController = new PlaneDistortionController(parent, distortionMesh.planeVertexPositions);
+    // @ts-ignore
+    const dragInputHandler = new DragInputHandler(canvas, planeDistortionController);
     const videoRendererResizer = new VideoRendererSizer(distortionMesh.renderer, video, distortionMesh.videoTexture);
     
-    resetButton.addEventListener("click", () => distortionMesh.resetVertices());
+    resetButton.addEventListener("click", () => planeDistortionController.resetVertices());
     photoButton.addEventListener("click", () => distortionMesh.takePhoto());
     
     try {
