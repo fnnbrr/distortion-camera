@@ -1,5 +1,8 @@
 ﻿import * as THREE from "three";
 import * as TWEEN from "@tweenjs/tween.js";
+import {AudioListenerManager} from "./audio-listener-manager.ts";
+import dragStopSfx from "./assets/audio/161122__reelworldstudio__cartoon-boing.mp3";
+import resetSfx from "./assets/audio/542195__breviceps__cartoon-wobble.mp3";
 
 export class PlaneDistortionController {
     parent: HTMLElement;
@@ -9,10 +12,12 @@ export class PlaneDistortionController {
     dragDelta: THREE.Vector2 = new THREE.Vector2(0, 0);
 
     dragStopTweens: TWEEN.Tween[] = [];
+    private readonly dragStopAudio: THREE.Audio;
 
     planeVertexPositions: THREE.BufferAttribute;
     planeVertexPositionsOriginal: THREE.BufferAttribute;
     resetTween: TWEEN.Tween = new TWEEN.Tween({});
+    private readonly resetAudio: THREE.Audio;
     
     constructor(parent: HTMLElement, planeVertexPositions: THREE.BufferAttribute) {
         this.parent = parent;
@@ -20,6 +25,24 @@ export class PlaneDistortionController {
         this.planeVertexPositionsOriginal = planeVertexPositions.clone();
 
         this.updateTweens(0);
+
+        const dragStopAudio = new THREE.Audio(AudioListenerManager.instance);
+        this.dragStopAudio = dragStopAudio;
+
+        new THREE.AudioLoader().load(dragStopSfx, buffer => {
+            dragStopAudio.setBuffer(buffer);
+            dragStopAudio.setLoop(false);
+            dragStopAudio.setVolume(1.0);
+        });
+        
+        const resetAudio = new THREE.Audio(AudioListenerManager.instance);
+        this.resetAudio = resetAudio;
+
+        new THREE.AudioLoader().load(resetSfx, buffer => {
+            resetAudio.setBuffer(buffer);
+            resetAudio.setLoop(false);
+            resetAudio.setVolume(1.0);
+        });
     }
 
     updateTweens = (time: number) => {
@@ -102,6 +125,11 @@ export class PlaneDistortionController {
 
         this.isDragging = false;
 
+        if (this.dragStopAudio.isPlaying) {
+            this.dragStopAudio.stop();
+        }
+        this.dragStopAudio.play();
+
         this.animateDragStop();
     }
 
@@ -145,5 +173,7 @@ export class PlaneDistortionController {
                 this.planeVertexPositions.needsUpdate = true;
             })
             .start();
+        
+        this.resetAudio.play();
     }
 }

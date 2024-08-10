@@ -1,6 +1,7 @@
 ﻿import * as THREE from "three";
 import * as TWEEN from "@tweenjs/tween.js";
 import {AudioListenerManager} from "./audio-listener-manager.ts";
+import cameraShutterSfx from "./assets/audio/242429__lebaston100__camera-click.mp3";
 
 export class VideoPlaneRenderer {
     parent: HTMLElement;
@@ -15,6 +16,7 @@ export class VideoPlaneRenderer {
 
     private cameraFlashTween: TWEEN.Tween = new TWEEN.Tween({});
     private readonly overlayMaterial: THREE.Material;
+    private readonly cameraAudio: THREE.Audio;
     
     constructor(videoElement: HTMLVideoElement, parent: HTMLElement, outputCanvas: HTMLCanvasElement) {
         this.parent = parent;
@@ -52,6 +54,16 @@ export class VideoPlaneRenderer {
         this.renderer = new THREE.WebGLRenderer({antialias: true, canvas: outputCanvas});
         
         this.animate(0);
+        
+        const sound = new THREE.Audio(AudioListenerManager.instance);
+        
+        new THREE.AudioLoader().load(cameraShutterSfx, buffer => {
+            sound.setBuffer(buffer);
+            sound.setLoop(false);
+            sound.setVolume(1.0);
+        });
+        
+        this.cameraAudio = sound;
     }
 
     animate = (time: number) => {
@@ -68,6 +80,8 @@ export class VideoPlaneRenderer {
         link.download = 'distortion-camera-photo.png';
         this.renderer.render(this.scene, this.camera);  // Need to render before taking screenshot: https://stackoverflow.com/a/30647502
         link.href = this.renderer.domElement.toDataURL("image/png");
+        
+        this.cameraAudio.play();
         
         if (this.cameraFlashTween.isPlaying()) {
             this.cameraFlashTween.stop();
