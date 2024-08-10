@@ -14,6 +14,8 @@
     #video: HTMLVideoElement;
     #stream: MediaStream = new MediaStream();
     
+    shouldMirror: boolean = true;
+    
     constructor(videoElement: HTMLVideoElement) {
         this.#video = videoElement;
 
@@ -23,9 +25,7 @@
         }
     }
     
-    async startNextVideoDevice(): Promise<MediaTrackCapabilities> {
-        let deviceCapabilities: MediaTrackCapabilities = {};
-        
+    async startNextVideoDevice() {
         try {
             // Clean up previous stream
             this.#stream.getTracks().forEach(track => track.stop());
@@ -36,18 +36,17 @@
             
             this.#stream = await navigator.mediaDevices.getUserMedia(this.#constraints);
             this.#video.srcObject = this.#stream;
-            this.#video.play()
-                .then(() => { deviceCapabilities = this.#stream.getTracks()[0].getCapabilities() })
-                .catch(err => console.error(`Error playing video: ${err}`));
+            await this.#video.play();
 
             if (!this.#hasQueriedVideoDevices) {
                 await this.#queryVideoDevices();
             }
+
+            const deviceCapabilities = this.#stream.getTracks()[0].getCapabilities()
+            this.shouldMirror = this.calculateShouldMirror(deviceCapabilities);
         } catch (e) {
             console.error(`Error accessing video device: ${e}`);
         }
-        
-        return deviceCapabilities;
     }
     
     hasMultipleVideoDevices(): boolean {
@@ -76,5 +75,37 @@
         this.#videoDeviceIndex %= this.#videoDevices.length;
         (this.#constraints.video as MediaTrackConstraints).deviceId = {
             exact: this.#videoDevices[this.#videoDeviceIndex].deviceId };
+    }
+    
+    // Helpful: https://stackoverflow.com/questions/65485170/getusermedia-detect-front-camera
+    private calculateShouldMirror(deviceCapabilities: MediaTrackCapabilities) {
+        // First check capabilities if provided
+        if (deviceCapabilities.facingMode !== undefined) {
+            if (deviceCapabilities.facingMode.includes("user") ||
+                deviceCapabilities.facingMode.includes("left") ||
+                deviceCapabilities.facingMode.includes("right")) {
+                return true;
+            }
+            else if (deviceCapabilities.facingMode.includes("environment")) {
+                return false;
+            }
+        }
+        
+        // Label will likely contain "front" or "back" on Android
+        const currentDevice = this.#videoDevices[this.#videoDeviceIndex];
+        if (currentDevice.label.includes("front")) {
+            return true;
+        }
+        else if (currentDevice.label.includes("back")) {
+            return false;
+        }
+        
+        // 0 index means user-facing camera on iOS
+        if (this.#videoDeviceIndex === 0) {
+            return true;
+        }
+        
+        // Default to false for all other cameras
+        return false;
     }
 }

@@ -20,13 +20,8 @@ export class VideoRendererSizer {
         this.resize();
     }
     
-    updateMirroring(capabilities: MediaTrackCapabilities) {
-        if (capabilities.facingMode?.includes("environment")) {
-            this.videoTexture.repeat.x = 1;
-        }
-        else {
-            this.videoTexture.repeat.x = -1;
-        }
+    updateMirroring(shouldMirror: boolean) {
+        this.videoTexture.repeat.x = shouldMirror ? -1 : 1;
 
         this.resize();
     }
