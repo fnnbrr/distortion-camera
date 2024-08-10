@@ -32,7 +32,6 @@ export class DistortionMesh {
         const plane = new THREE.PlaneGeometry(1, 1, 64, 64);
         this.videoTexture = new THREE.VideoTexture(this.videoElement);
         this.videoTexture.colorSpace = THREE.SRGBColorSpace;  // Necessary to preserve correct colors
-        this.videoTexture.wrapS = THREE.RepeatWrapping;  // Allows setting the repeat x scale to -1 to mirror horizontally
         const mesh = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: this.videoTexture }));
         this.scene.add(mesh);
 
@@ -50,11 +49,6 @@ export class DistortionMesh {
         this.planeVertexPositionsOriginal = this.planeVertexPositions.clone();
 
         this.renderer = new THREE.WebGLRenderer({antialias: true, canvas: outputCanvas});
-        
-        this.resize = this.resize.bind(this);
-        window.addEventListener("resize", this.resize);
-        this.videoElement.addEventListener("resize", this.resize);
-        this.resize();
         
         // Necessary bindings to preserve reference to this
         this.startDragMouse = this.startDragMouse.bind(this);
@@ -219,17 +213,6 @@ export class DistortionMesh {
             .start();
     }
     
-    updateMirroring(capabilities: MediaTrackCapabilities) {
-        if (capabilities.facingMode?.includes("environment")) {
-            this.videoTexture.repeat.x = 1;
-        }
-        else {
-            this.videoTexture.repeat.x = -1;
-        }
-        
-        this.resize();
-    }
-    
     takePhoto() {
         const link = document.createElement('a');
         link.download = 'distortion-camera-photo.png';
@@ -237,30 +220,5 @@ export class DistortionMesh {
         link.href = this.renderer.domElement.toDataURL("image/png");
         link.click();
         link.remove();
-    }
-
-    resize() {
-        this.renderer.setSize(this.parent.clientWidth, this.parent.clientHeight);
-        
-        const videoAspectRatio = this.videoElement.videoWidth / this.videoElement.videoHeight;
-        const rendererAspectRatio = this.parent.clientWidth / this.parent.clientHeight;
-        
-        const xRepeatSign = Math.sign(this.videoTexture.repeat.x);
-        
-        if (videoAspectRatio > rendererAspectRatio) {
-            this.videoTexture.repeat.x = xRepeatSign * (rendererAspectRatio / videoAspectRatio);
-            this.videoTexture.offset.x = (1 - this.videoTexture.repeat.x) / 2;
-            
-            this.videoTexture.repeat.y = 1;
-            this.videoTexture.offset.y = 0;
-            
-        }
-        else {
-            this.videoTexture.repeat.x = xRepeatSign;
-            this.videoTexture.offset.x = 0;
-
-            this.videoTexture.repeat.y = videoAspectRatio / rendererAspectRatio;
-            this.videoTexture.offset.y = (1 - this.videoTexture.repeat.y) / 2;
-        }
     }
 }

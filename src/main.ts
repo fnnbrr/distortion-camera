@@ -1,6 +1,7 @@
 import './style.css'
 import {VideoInput} from "./video-input.ts";
 import {DistortionMesh} from "./distortion-mesh.ts";
+import {VideoRendererSizer} from "./video-renderer-sizer.ts";
 import cameraIcon from "./assets/photo-camera-svgrepo-com.svg";
 import cameraSwitchIcon from "./assets/camera-switch-svgrepo-com.svg";
 import deleteIcon from "./assets/delete-svgrepo-com.svg";
@@ -25,16 +26,17 @@ async function main() {
     
     const videoInput = new VideoInput(video);
     const distortionMesh = new DistortionMesh(video, parent, canvas);
+    const videoRendererResizer = new VideoRendererSizer(distortionMesh.renderer, video, distortionMesh.videoTexture);
     
     resetButton.addEventListener("click", () => distortionMesh.resetVertices());
     photoButton.addEventListener("click", () => distortionMesh.takePhoto());
     
     try {
-        distortionMesh.updateMirroring(await videoInput.startNextVideoDevice());
+        videoRendererResizer.updateMirroring(await videoInput.startNextVideoDevice());
         
         if (videoInput.hasMultipleVideoDevices()) {
             swapCameraButton.addEventListener("click", async () => {
-                distortionMesh.updateMirroring(await videoInput.startNextVideoDevice());
+                videoRendererResizer.updateMirroring(await videoInput.startNextVideoDevice());
             });
         }
         else {
