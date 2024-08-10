@@ -38,7 +38,7 @@ async function main() {
     const fullscreenController = new FullscreenController(fullscreenButton, fullscreenImage, parent);
     
     resetButton.addEventListener("click", () => planeDistortionController.resetVertices());
-    photoButton.addEventListener("click", () => distortionMesh.takePhoto());
+    photoButton.addEventListener("mousedown", () => distortionMesh.takePhoto());
     
     try {
         await videoInput.startNextVideoDevice();

@@ -35,6 +35,10 @@ html, body, #app, #canvas {
     display: none;
 }
 
+#canvas {
+    filter: saturate(1.4);  /* For a more colorful/playful look */
+}
+
 h1 {
     font-size: 3.2em;
     line-height: 1.1;
