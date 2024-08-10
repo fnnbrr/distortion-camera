@@ -16,7 +16,7 @@ async function main() {
     <video id="video" playsInline poster="${cameraIcon}"></video>
     <canvas id="canvas"></canvas>
     <button id="reset-button"><img src="${deleteIcon}"></button>
-    <button id="photo-button">take photo</button>
+    <button id="photo-button"><img src="${cameraIcon}"></button>
     <button id="swap-camera-button"><img src="${cameraSwitchIcon}"></button>
     <button id="fullscreen-button"><img id="fullscreen-image"></button>
     `
