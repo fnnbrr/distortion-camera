@@ -7,6 +7,7 @@ import cameraSwitchIcon from "./assets/camera-switch-svgrepo-com.svg";
 import deleteIcon from "./assets/delete-svgrepo-com.svg";
 import {PlaneDistortionController} from "./plane-distortion-controller.ts";
 import {DragInputHandler} from "./drag-input-handler.ts";
+import {FullscreenController} from "./fullscreen-controller.ts";
 
 main();
 
@@ -17,6 +18,7 @@ async function main() {
     <button id="reset-button"><img src="${deleteIcon}"></button>
     <button id="photo-button">take photo</button>
     <button id="swap-camera-button"><img src="${cameraSwitchIcon}"></button>
+    <button id="fullscreen-button"><img id="fullscreen-image"></button>
     `
     
     const parent = document.querySelector<HTMLDivElement>('#app') as HTMLDivElement;
@@ -25,13 +27,15 @@ async function main() {
     const resetButton = document.querySelector<HTMLButtonElement>('#reset-button') as HTMLButtonElement;
     const photoButton = document.querySelector<HTMLButtonElement>('#photo-button') as HTMLButtonElement;
     const swapCameraButton = document.querySelector<HTMLButtonElement>('#swap-camera-button') as HTMLButtonElement;
+    const fullscreenButton = document.querySelector<HTMLButtonElement>('#fullscreen-button') as HTMLButtonElement;
+    const fullscreenImage = document.querySelector<HTMLImageElement>('#fullscreen-image') as HTMLImageElement;
     
     const videoInput = new VideoInput(video);
     const distortionMesh = new VideoPlaneRenderer(video, parent, canvas);
     const planeDistortionController = new PlaneDistortionController(parent, distortionMesh.planeVertexPositions);
-    // @ts-ignore
     const dragInputHandler = new DragInputHandler(canvas, planeDistortionController);
     const videoRendererResizer = new VideoRendererSizer(distortionMesh.renderer, video, distortionMesh.videoTexture);
+    const fullscreenController = new FullscreenController(fullscreenButton, fullscreenImage, parent);
     
     resetButton.addEventListener("click", () => planeDistortionController.resetVertices());
     photoButton.addEventListener("click", () => distortionMesh.takePhoto());
