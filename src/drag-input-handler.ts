@@ -39,6 +39,7 @@ export class DragInputHandler {
     }
 
     onDragTouch(event: TouchEvent) {
+        event.preventDefault();  // Prevents default scrolling and/or page refresh gestures on mobile
         this.planeDragController.onDrag(new THREE.Vector2(event.touches[0].clientX, event.touches[0].clientY));
     }
 
