@@ -4,10 +4,11 @@ import {AudioListenerManager} from "./audio-listener-manager.ts";
 import dragStopSfx from "./assets/audio/161122__reelworldstudio__cartoon-boing.mp3";
 import resetSfx from "./assets/audio/542195__breviceps__cartoon-wobble.mp3";
 
-export class PlaneDistortionController {
+export class PlaneDistortionController extends EventTarget {
     parent: HTMLElement;
     
     isDragging: boolean = false;
+    onDragEvent: CustomEvent = new CustomEvent("ondrag");
     dragPosition: THREE.Vector2 = new THREE.Vector2(0, 0);
     dragDelta: THREE.Vector2 = new THREE.Vector2(0, 0);
 
@@ -20,6 +21,8 @@ export class PlaneDistortionController {
     private readonly resetAudio: THREE.Audio;
     
     constructor(parent: HTMLElement, planeVertexPositions: THREE.BufferAttribute) {
+        super();
+        
         this.parent = parent;
         this.planeVertexPositions = planeVertexPositions;
         this.planeVertexPositionsOriginal = planeVertexPositions.clone();
@@ -75,6 +78,8 @@ export class PlaneDistortionController {
     onDrag(eventViewportPosition: THREE.Vector2) {
         if (!this.isDragging) return;
 
+        this.dispatchEvent(this.onDragEvent);
+        
         const prevDrawPosition = this.dragPosition.clone();
         this.recalculateDragPosition(eventViewportPosition);
 

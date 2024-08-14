@@ -19,6 +19,7 @@ async function main() {
     <button id="photo-button"><img src="${cameraIcon}"></button>
     <button id="swap-camera-button"><img src="${cameraSwitchIcon}"></button>
     <button id="fullscreen-button"><img id="fullscreen-image"></button>
+    <div id="tutorial-tooltip" class="show-tooltip">drag the screen to distort your image!</div>
     `
     
     const parent = document.querySelector<HTMLDivElement>('#app') as HTMLDivElement;
@@ -29,6 +30,7 @@ async function main() {
     const swapCameraButton = document.querySelector<HTMLButtonElement>('#swap-camera-button') as HTMLButtonElement;
     const fullscreenButton = document.querySelector<HTMLButtonElement>('#fullscreen-button') as HTMLButtonElement;
     const fullscreenImage = document.querySelector<HTMLImageElement>('#fullscreen-image') as HTMLImageElement;
+    const tutorialTooltip = document.querySelector<HTMLDivElement>('#tutorial-tooltip') as HTMLDivElement;
     
     const videoInput = new VideoInput(video);
     const distortionMesh = new VideoPlaneRenderer(video, parent, canvas);
@@ -39,6 +41,10 @@ async function main() {
     
     resetButton.addEventListener("click", () => planeDistortionController.resetVertices());
     photoButton.addEventListener("mousedown", () => distortionMesh.takePhoto());
+    planeDistortionController.addEventListener("ondrag", () => {
+        tutorialTooltip.classList.remove("show-tooltip");
+        tutorialTooltip.classList.add("hide-tooltip");
+    });
     
     try {
         await videoInput.startNextVideoDevice();

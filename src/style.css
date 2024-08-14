@@ -136,6 +136,59 @@ button {
     }
 }
 
+#tutorial-tooltip {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: fit-content;
+    height: fit-content;
+
+    border-radius: 4px;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: rgba(0, 0, 0, 0.75);
+    text-align: center;
+}
+
+.show-tooltip {
+    animation-delay: 1.0s;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+    animation-name: show-tooltip;
+    animation-timing-function: ease-in-out;
+}
+
+.hide-tooltip {
+    animation-delay: 0.5s;
+    animation-duration: 0.5s;
+    animation-fill-mode: forwards;
+    animation-name: hide-tooltip;
+    animation-timing-function: ease-in-out;
+}
+
+@keyframes show-tooltip {
+    from {
+        transform: translate(-50%, -100px);
+    }
+    
+    to {
+        transform: translate(-50%, 0);
+    }
+}
+
+@keyframes hide-tooltip {
+    from {
+        transform: translate(-50%, 0);
+    }
+
+    to {
+        transform: translate(-50%, -100px);
+    }
+}
+
 @media (prefers-color-scheme: light) {
     :root {
         color: #213547;
